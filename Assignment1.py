@@ -107,32 +107,32 @@ def blockSort(file):
     return
     
 def mergeBlock(fileList):
-    fileHandlerList=[]
+    fileHandlerList=[] 
     maxLen=maxPair(blockSize)
     #blockList=[]
     for file in fileList:
         f=open(file, encoding='UTF-8')
-        fileHandlerList.append(f)
+        fileHandlerList.append(f)                   #get the list of file handlers
     blockLen=int(blockSize/len(fileList))
     tempList=[]
     tempSortedList=[]
     for handler in fileHandlerList:
-        tempList.append(readFromFile(handler, blockLen))
+        tempList.append(readFromFile(handler, blockLen))        #create the unsorted list, take equal elements from each block
     readCount=0
     writeCount=0
     while tempList !=[]:
         minimum=min(tempList)
         index=tempList.index(minimum)
-        tempSortedList.append(tempList[index].pop(0))
+        tempSortedList.append(tempList[index].pop(0))           #find the smallest term-docID pair and pop it into the sorted list
         for item in tempList:
-            if item==[]:
+            if item==[]:                                        #once all extracted elements from a block is popped into sorted list, get another batch of elements from that block
                 readCount+=1
                 index=tempList.index(item)
                 item.extend(readFromFile(fileHandlerList[index], blockLen))
-                if item==['EOF']:
+                if item==['EOF']:                               #once all elements of a block is extracted, remove the block from the unsorted list
                     tempList.pop(index)
                     fileHandlerList.pop(index)
-        if len(tempSortedList)>=maxLen:
+        if len(tempSortedList)>=maxLen:                         #write sorted list to file, limited by max size of sorted list allowed based on block size
             writeTerm(tempSortedList, 'finalTerms.txt')
             tempSortedList=[]
             writeCount+=1
@@ -142,18 +142,18 @@ def mergeBlock(fileList):
 
 def main(directory, blockSize):
     start = time.process_time()
-    docParse(directory, blockSize)
+    docParse(directory, blockSize)                              #Parse, normalized token pair written into files
     doneParse = time.process_time()
     os.chdir(resultsDir)
     blockList=fileListing(resultsDir)
     for block in blockList:
-        before = time.process_time()
+        before = time.process_time()                            #Sort the blocks internally
         blockSort(block)
         after = time.process_time()
         print('sorted 1 block for' + str(after - before))
     sortedBlockList=[item for item in fileListing(resultsDir) if item not in blockList]
     doneBlock = time.process_time()
-    mergeBlock(sortedBlockList)
+    mergeBlock(sortedBlockList)                                 #external merge sort
     doneMerge = time.process_time()
     print('parsing and indexing took ' + str(doneParse-start) + '   merging took ' + str(doneMerge-doneBlock))
     return
